@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width,initial-scale=1" />
+	<title>Wardwise Areas</title>
+	<style>
+		:root{--gap:0}
+		html,body{height:100%;margin:0;font-family:system-ui,Segoe UI,Arial;background:#352792;color:#111}
+		/* compact 3x3 grid for ward buttons (button-like) */
+		.wards{display:grid;grid-template-columns:repeat(3,1fr);grid-auto-rows:150px;max-width:1100px;margin:48px auto;gap:40px;padding:24px}
+		.ward-btn{border:0;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:1.05rem;padding:16px;border-radius:14px;outline:none;transition:transform .12s ease,box-shadow .12s ease}
+		.ward-btn:hover{transform:translateY(-4px);box-shadow:0 8px 18px rgba(0,0,0,0.18)}
+		.ward-btn:active{transform:translateY(-1px) scale(.995)}
+
+		/* modal for area selection */
+		#areaPanel{display:none;position:fixed;inset:0;align-items:center;justify-content:center;background:rgba(0,0,0,0.45);z-index:40}
+		#areaModal{background:#fff;padding:18px;border-radius:10px;max-width:760px;width:94%;max-height:86vh;overflow:auto;box-shadow:0 10px 30px rgba(0,0,0,0.25)}
+		#areaModal h3{margin-top:0}
+		.area-list{display:flex;flex-direction:column;gap:8px;max-height:56vh;overflow:auto;padding-right:6px}
+		.confirm{margin-top:12px;padding:8px 12px}
+		.selected-display{margin-top:12px;font-weight:600}
+		.modal-row{display:flex;gap:8px;align-items:center}
+		.close-btn{margin-left:auto;background:#eee;border:0;padding:6px 10px;border-radius:6px;cursor:pointer}
+		/* water logging info panel */
+		.water-log-panel{display:none;position:fixed;inset:0;align-items:center;justify-content:center;background:rgba(0,0,0,0.5);z-index:50;padding:12px}
+		.water-log-modal{background:#fff;padding:24px;border-radius:12px;max-width:800px;width:100%;max-height:85vh;overflow:auto;box-shadow:0 12px 40px rgba(0,0,0,0.3)}
+		.water-log-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+		.water-log-header h2{margin:0;color:#333}
+		.water-log-close{background:#ff6b6b;color:#fff;border:0;padding:8px 14px;border-radius:6px;cursor:pointer;font-weight:600}
+		.water-log-content{display:flex;flex-direction:column;gap:12px}
+		.area-log-item{border-left:4px solid #ff6b6b;padding:12px;background:#f9f9f9;border-radius:6px}
+		.area-name{font-weight:700;color:#222;font-size:1.05rem}
+		.log-status{margin-top:8px;font-size:0.95rem;line-height:1.5}
+		.log-high{color:#d32f2f;font-weight:600}
+		.log-medium{color:#f57c00;font-weight:600}
+		.log-low{color:#388e3c;font-weight:600}
+	</style>
+</head>
+	<body>
+	<div class="wards" id="wards"></div>
+
+	<div id="areaPanel">
+		<div id="areaModal">
+			<div class="modal-row">
+				<h3 id="areaPanelTitle">Areas</h3>
+				<button class="close-btn" id="closeModal">Close</button>
+			</div>
+			<div class="area-list" id="areaList"></div>
+			<div class="modal-row">
+				<button class="confirm" id="confirmBtn">Confirm Selection</button>
+				<div class="selected-display" id="selectedDisplay"></div>
+			</div>
+		</div>
+	</div>
+
+	<div class="water-log-panel" id="waterLogPanel">
+		<div class="water-log-modal">
+			<div class="water-log-header">
+				<h2>Water Logging Conditions</h2>
+				<button class="water-log-close" id="closeWaterLog">Close</button>
+			</div>
+			<div class="water-log-content" id="waterLogContent"></div>
+		</div>
+	</div>
+
+	<script>
+		const wardsData = {
+			"Central Delhi": ["Paharganj","Karol Bagh","Patel Nagar","Rajinder Nagar","Tilak Nagar","Moti Nagar","Connaught Place","Chanakya Puri","Parliament Street","Daryaganj","Chandni Chowk","Kashmiri Gate","Ballimaran","Sadar Bazaar"],
+			"North Delhi": ["Model Town","GTB Nagar","Civil Lines","Kashmiri Gate","Azadpur","Wazirpur","Shakurpur","Bhai Parmanand Colony","Adarsh Nagar","Kingsway Camp","Shastri Nagar","Roop Nagar"],
+			"South Delhi": ["Hauz Khas","Greater Kailash","Malviya Nagar","Defence Colony","Lajpat Nagar","Sarita Vihar","Tughlakabad","Ambedkar Nagar","Safdarjung","South Extension","Maharani Bagh","Badarpur"],
+			"East Delhi": ["Anand Vihar","Mayur Vihar","Preet Vihar","Krishna Nagar","Vivek Vihar","Geeta Colony","Kalyanpuri","Mandawali","Pandav Nagar","Surya Niketan","Gagan Vihar"],
+			"West Delhi": ["Janakpuri","Rohini","Pitampura","Punjabi Bagh","Rajouri Garden","Ashok Nagar","Shastri Nagar","Nangloi","Vikaspuri","Uttam Nagar","Dwarka"],
+			"Northeast Delhi": ["Karawal Nagar","Mustafabad","Nand Nagri","Yamuna Vihar","Bhajanpura","Wazirabad","Gokalpuri","Noor-e-Ilaid","Seelampur","Khajoori"],
+			"Northwest Delhi": ["Rohini","Pitampura","Shastri Nagar","Azadpur","Bawana","Narela","Sultanpur","Mangolpuri","Jahangirpuri","Rohini Sector 22"],
+			"Outer Delhi": ["Najafgarh","Dwarka","Kapashera","Sultanpur","Palam","Mehrauli","Bijwasan","Mahipalpur","Vasant Kunj","Chhawla"],
+			"New Delhi": ["Connaught Place","Chanakya Puri","Diplomatic Enclave","President's Estate","Rashtrapati Bhavan","South Avenue","Janpath","Safdarjung","Raisina Hill","North Avenue"]
+		};
+
+		const colors = ["#1f77b4","#ff7f0e","#2ca02c","#d62728","#9467bd","#8c564b","#e377c2","#7f7f7f","#17becf"];
+
+		const waterLoggingData = {
+			"Paharganj": {status: "High", incidents: 8, lastIncident: "2024-12-20", severity: "Severe flooding during monsoon", population: "45,000", affectedAreas: 12, drainageType: "Mixed", maintenanceRate: 35, pwdZone: "Zone-A", repairStatus: "In Progress", completionDate: "2025-02-15"},
+			"Karol Bagh": {status: "Medium", incidents: 4, lastIncident: "2024-11-15", severity: "Localized waterlogging on main roads", population: "38,500", affectedAreas: 6, drainageType: "Underground", maintenanceRate: 65, pwdZone: "Zone-A", repairStatus: "Planned", completionDate: "2025-03-10"},
+			"Patel Nagar": {status: "Low", incidents: 1, lastIncident: "2024-10-30", severity: "Minor drainage issues", population: "52,000", affectedAreas: 1, drainageType: "Underground", maintenanceRate: 88, pwdZone: "Zone-A", repairStatus: "Completed", completionDate: "2024-09-30"},
+			"Rajinder Nagar": {status: "Medium", incidents: 3, lastIncident: "2024-12-10", severity: "Water accumulation near markets", population: "41,200", affectedAreas: 4, drainageType: "Open", maintenanceRate: 52, pwdZone: "Zone-A", repairStatus: "Planned", completionDate: "2025-02-28"},
+			"Tilak Nagar": {status: "High", incidents: 6, lastIncident: "2024-12-15", severity: "Persistent waterlogging in residential areas", population: "48,900", affectedAreas: 10, drainageType: "Mixed", maintenanceRate: 40, pwdZone: "Zone-A", repairStatus: "In Progress", completionDate: "2025-01-30"},
+			"Moti Nagar": {status: "Medium", incidents: 2, lastIncident: "2024-11-20", severity: "Drainage overflow issues", population: "35,600", affectedAreas: 3, drainageType: "Underground", maintenanceRate: 72, pwdZone: "Zone-A", repairStatus: "Completed", completionDate: "2024-11-05"},
+			"Connaught Place": {status: "Low", incidents: 0, lastIncident: "2024-09-05", severity: "Well-maintained drainage system", population: "12,000", affectedAreas: 0, drainageType: "Underground", maintenanceRate: 95, pwdZone: "Zone-B", repairStatus: "Completed", completionDate: "2024-08-15"},
+			"Chanakya Puri": {status: "Low", incidents: 1, lastIncident: "2024-10-12", severity: "Minimal waterlogging incidents", population: "28,500", affectedAreas: 1, drainageType: "Underground", maintenanceRate: 92, pwdZone: "Zone-B", repairStatus: "Completed", completionDate: "2024-09-20"},
+			"Parliament Street": {status: "Low", incidents: 0, lastIncident: "2024-08-25", severity: "Central area with good drainage", population: "8,000", affectedAreas: 0, drainageType: "Underground", maintenanceRate: 98, pwdZone: "Zone-B", repairStatus: "Completed", completionDate: "2024-08-10"},
+			"Daryaganj": {status: "High", incidents: 7, lastIncident: "2024-12-18", severity: "Critical waterlogging in old city", population: "62,000", affectedAreas: 14, drainageType: "Open", maintenanceRate: 30, pwdZone: "Zone-A", repairStatus: "In Progress", completionDate: "2025-03-01"},
+			"Chandni Chowk": {status: "High", incidents: 9, lastIncident: "2024-12-22", severity: "Severe flooding due to narrow lanes", population: "55,000", affectedAreas: 15, drainageType: "Open", maintenanceRate: 25, pwdZone: "Zone-A", repairStatus: "In Progress", completionDate: "2025-04-15"},
+			"Kashmiri Gate": {status: "High", incidents: 5, lastIncident: "2024-12-12", severity: "Water accumulation near railway", population: "38,000", affectedAreas: 8, drainageType: "Mixed", maintenanceRate: 45, pwdZone: "Zone-A", repairStatus: "Planned", completionDate: "2025-02-20"},
+			"Ballimaran": {status: "High", incidents: 6, lastIncident: "2024-12-19", severity: "Waterlogging in old city lanes", population: "58,000", affectedAreas: 12, drainageType: "Open", maintenanceRate: 32, pwdZone: "Zone-A", repairStatus: "In Progress", completionDate: "2025-03-15"},
+			"Sadar Bazaar": {status: "Medium", incidents: 4, lastIncident: "2024-11-28", severity: "Seasonal waterlogging issues", population: "44,000", affectedAreas: 5, drainageType: "Mixed", maintenanceRate: 58, pwdZone: "Zone-A", repairStatus: "Planned", completionDate: "2025-02-10"},
+			"Model Town": {status: "Low", incidents: 1, lastIncident: "2024-10-05", severity: "Good drainage infrastructure", population: "35,000", affectedAreas: 1, drainageType: "Underground", maintenanceRate: 90, pwdZone: "Zone-C", repairStatus: "Completed", completionDate: "2024-09-01"},
+			"GTB Nagar": {status: "Medium", incidents: 3, lastIncident: "2024-12-08", severity: "Water pooling in some areas", population: "42,000", affectedAreas: 4, drainageType: "Underground", maintenanceRate: 68, pwdZone: "Zone-C", repairStatus: "Planned", completionDate: "2025-02-05"},
+			"Civil Lines": {status: "Low", incidents: 2, lastIncident: "2024-11-15", severity: "Minor drainage maintenance", population: "32,000", affectedAreas: 2, drainageType: "Underground", maintenanceRate: 85, pwdZone: "Zone-C", repairStatus: "Completed", completionDate: "2024-10-20"},
+			"Azadpur": {status: "Medium", incidents: 4, lastIncident: "2024-12-14", severity: "Waterlogging near vegetable market", population: "39,000", affectedAreas: 5, drainageType: "Mixed", maintenanceRate: 60, pwdZone: "Zone-C", repairStatus: "In Progress", completionDate: "2025-01-25"},
+			"Wazirpur": {status: "High", incidents: 5, lastIncident: "2024-12-20", severity: "Industrial area with poor drainage", population: "48,000", affectedAreas: 9, drainageType: "Open", maintenanceRate: 38, pwdZone: "Zone-C", repairStatus: "In Progress", completionDate: "2025-02-28"},
+			"Shakurpur": {status: "Medium", incidents: 2, lastIncident: "2024-11-10", severity: "Localized waterlogging", population: "26,000", affectedAreas: 2, drainageType: "Mixed", maintenanceRate: 70, pwdZone: "Zone-C", repairStatus: "Completed", completionDate: "2024-10-15"},
+			"Bhai Parmanand Colony": {status: "Low", incidents: 1, lastIncident: "2024-10-20", severity: "Minimal issues", population: "22,000", affectedAreas: 1, drainageType: "Underground", maintenanceRate: 87, pwdZone: "Zone-C", repairStatus: "Completed", completionDate: "2024-09-10"},
+			"Adarsh Nagar": {status: "Low", incidents: 1, lastIncident: "2024-09-25", severity: "Well-maintained area", population: "31,000", affectedAreas: 1, drainageType: "Underground", maintenanceRate: 89, pwdZone: "Zone-C", repairStatus: "Completed", completionDate: "2024-09-05"},
+			"Kingsway Camp": {status: "Low", incidents: 0, lastIncident: "2024-08-15", severity: "No major incidents", population: "18,000", affectedAreas: 0, drainageType: "Underground", maintenanceRate: 94, pwdZone: "Zone-C", repairStatus: "Completed", completionDate: "2024-08-01"},
+			"Shastri Nagar": {status: "Medium", incidents: 3, lastIncident: "2024-11-30", severity: "Seasonal drainage issues", population: "37,000", affectedAreas: 3, drainageType: "Mixed", maintenanceRate: 66, pwdZone: "Zone-C", repairStatus: "Planned", completionDate: "2025-02-15"},
+			"Roop Nagar": {status: "Low", incidents: 2, lastIncident: "2024-10-18", severity: "Minor waterlogging", population: "29,000", affectedAreas: 2, drainageType: "Underground", maintenanceRate: 83, pwdZone: "Zone-C", repairStatus: "Completed", completionDate: "2024-10-10"},
+			"Hauz Khas": {status: "Medium", incidents: 3, lastIncident: "2024-12-10", severity: "Water body overflow issues", population: "34,000", affectedAreas: 4, drainageType: "Open", maintenanceRate: 62, pwdZone: "Zone-D", repairStatus: "In Progress", completionDate: "2025-01-20"},
+			"Greater Kailash": {status: "Low", incidents: 1, lastIncident: "2024-11-05", severity: "Minimal waterlogging", population: "52,000", affectedAreas: 1, drainageType: "Underground", maintenanceRate: 91, pwdZone: "Zone-D", repairStatus: "Completed", completionDate: "2024-10-25"},
+			"Malviya Nagar": {status: "Low", incidents: 2, lastIncident: "2024-10-22", severity: "Minor drainage problems", population: "44,000", affectedAreas: 2, drainageType: "Underground", maintenanceRate: 86, pwdZone: "Zone-D", repairStatus: "Completed", completionDate: "2024-10-05"},
+			"Defence Colony": {status: "Low", incidents: 0, lastIncident: "2024-09-01", severity: "Good drainage system", population: "36,000", affectedAreas: 0, drainageType: "Underground", maintenanceRate: 96, pwdZone: "Zone-D", repairStatus: "Completed", completionDate: "2024-08-20"},
+			"Lajpat Nagar": {status: "Medium", incidents: 2, lastIncident: "2024-11-20", severity: "Market area drainage issues", population: "40,000", affectedAreas: 3, drainageType: "Mixed", maintenanceRate: 71, pwdZone: "Zone-D", repairStatus: "Completed", completionDate: "2024-11-10"},
+			"Sarita Vihar": {status: "Medium", incidents: 3, lastIncident: "2024-12-05", severity: "Waterlogging in residential blocks", population: "51,000", affectedAreas: 5, drainageType: "Underground", maintenanceRate: 67, pwdZone: "Zone-D", repairStatus: "Planned", completionDate: "2025-03-05"},
+			"Tughlakabad": {status: "Low", incidents: 1, lastIncident: "2024-10-30", severity: "Minimal incidents", population: "28,000", affectedAreas: 1, drainageType: "Underground", maintenanceRate: 84, pwdZone: "Zone-D", repairStatus: "Completed", completionDate: "2024-10-15"},
+			"Ambedkar Nagar": {status: "Medium", incidents: 2, lastIncident: "2024-11-25", severity: "Localized issues", population: "33,000", affectedAreas: 2, drainageType: "Mixed", maintenanceRate: 73, pwdZone: "Zone-D", repairStatus: "Completed", completionDate: "2024-11-15"},
+			"Safdarjung": {status: "Low", incidents: 0, lastIncident: "2024-08-20", severity: "Well-managed area", population: "25,000", affectedAreas: 0, drainageType: "Underground", maintenanceRate: 97, pwdZone: "Zone-D", repairStatus: "Completed", completionDate: "2024-08-05"},
+			"South Extension": {status: "Low", incidents: 1, lastIncident: "2024-10-10", severity: "Minor issues", population: "38,000", affectedAreas: 1, drainageType: "Underground", maintenanceRate: 88, pwdZone: "Zone-D", repairStatus: "Completed", completionDate: "2024-10-01"},
+			"Maharani Bagh": {status: "Low", incidents: 1, lastIncident: "2024-11-01", severity: "Minimal waterlogging", population: "24,000", affectedAreas: 1, drainageType: "Underground", maintenanceRate: 85, pwdZone: "Zone-D", repairStatus: "Completed", completionDate: "2024-10-20"},
+			"Badarpur": {status: "Medium", incidents: 4, lastIncident: "2024-12-12", severity: "Water accumulation during rain", population: "55,000", affectedAreas: 6, drainageType: "Mixed", maintenanceRate: 55, pwdZone: "Zone-D", repairStatus: "In Progress", completionDate: "2025-02-25"},
+			"Anand Vihar": {status: "High", incidents: 6, lastIncident: "2024-12-16", severity: "Severe waterlogging in colony", population: "61,000", affectedAreas: 11, drainageType: "Open", maintenanceRate: 42, pwdZone: "Zone-E", repairStatus: "In Progress", completionDate: "2025-03-20"},
+			"Mayur Vihar": {status: "Medium", incidents: 3, lastIncident: "2024-12-09", severity: "Drainage overflow issues", population: "57,000", affectedAreas: 5, drainageType: "Underground", maintenanceRate: 64, pwdZone: "Zone-E", repairStatus: "Planned", completionDate: "2025-02-20"},
+			"Preet Vihar": {status: "Medium", incidents: 2, lastIncident: "2024-11-28", severity: "Seasonal waterlogging", population: "43,000", affectedAreas: 3, drainageType: "Mixed", maintenanceRate: 69, pwdZone: "Zone-E", repairStatus: "Completed", completionDate: "2024-11-15"},
+			"Krishna Nagar": {status: "High", incidents: 5, lastIncident: "2024-12-17", severity: "Persistent waterlogging", population: "51,000", affectedAreas: 9, drainageType: "Mixed", maintenanceRate: 48, pwdZone: "Zone-E", repairStatus: "In Progress", completionDate: "2025-02-10"},
+			"Vivek Vihar": {status: "Medium", incidents: 3, lastIncident: "2024-12-08", severity: "Water pooling in streets", population: "46,000", affectedAreas: 4, drainageType: "Underground", maintenanceRate: 63, pwdZone: "Zone-E", repairStatus: "Planned", completionDate: "2025-02-28"},
+			"Geeta Colony": {status: "High", incidents: 4, lastIncident: "2024-12-14", severity: "Waterlogging in residential area", population: "39,000", affectedAreas: 7, drainageType: "Mixed", maintenanceRate: 50, pwdZone: "Zone-E", repairStatus: "In Progress", completionDate: "2025-01-31"},
+			"Kalyanpuri": {status: "Medium", incidents: 2, lastIncident: "2024-11-20", severity: "Minor drainage issues", population: "31,000", affectedAreas: 2, drainageType: "Underground", maintenanceRate: 74, pwdZone: "Zone-E", repairStatus: "Completed", completionDate: "2024-11-10"},
+			"Mandawali": {status: "Low", incidents: 1, lastIncident: "2024-10-25", severity: "Minimal incidents", population: "27,000", affectedAreas: 1, drainageType: "Underground", maintenanceRate: 82, pwdZone: "Zone-E", repairStatus: "Completed", completionDate: "2024-10-15"},
+			"Pandav Nagar": {status: "Medium", incidents: 2, lastIncident: "2024-12-01", severity: "Localized waterlogging", population: "34,000", affectedAreas: 3, drainageType: "Mixed", maintenanceRate: 68, pwdZone: "Zone-E", repairStatus: "Completed", completionDate: "2024-11-20"},
+			"Surya Niketan": {status: "Low", incidents: 1, lastIncident: "2024-10-15", severity: "Minor issues", population: "23,000", affectedAreas: 1, drainageType: "Underground", maintenanceRate: 80, pwdZone: "Zone-E", repairStatus: "Completed", completionDate: "2024-10-01"},
+			"Gagan Vihar": {status: "Low", incidents: 0, lastIncident: "2024-09-10", severity: "Good drainage", population: "29,000", affectedAreas: 0, drainageType: "Underground", maintenanceRate: 92, pwdZone: "Zone-E", repairStatus: "Completed", completionDate: "2024-08-25"},
+			"Janakpuri": {status: "Medium", incidents: 3, lastIncident: "2024-12-06", severity: "Waterlogging in some blocks", population: "56,000", affectedAreas: 5, drainageType: "Underground", maintenanceRate: 65, pwdZone: "Zone-F", repairStatus: "Planned", completionDate: "2025-03-01"},
+			"Rohini": {status: "Low", incidents: 2, lastIncident: "2024-11-12", severity: "Minor waterlogging", population: "78,000", affectedAreas: 2, drainageType: "Underground", maintenanceRate: 87, pwdZone: "Zone-F", repairStatus: "Completed", completionDate: "2024-10-30"},
+			"Pitampura": {status: "Low", incidents: 1, lastIncident: "2024-10-20", severity: "Well-maintained", population: "42,000", affectedAreas: 1, drainageType: "Underground", maintenanceRate: 89, pwdZone: "Zone-F", repairStatus: "Completed", completionDate: "2024-10-10"},
+			"Punjabi Bagh": {status: "Medium", incidents: 2, lastIncident: "2024-11-25", severity: "Localized issues", population: "36,000", affectedAreas: 2, drainageType: "Mixed", maintenanceRate: 72, pwdZone: "Zone-F", repairStatus: "Completed", completionDate: "2024-11-15"},
+			"Rajouri Garden": {status: "Low", incidents: 1, lastIncident: "2024-10-30", severity: "Minimal incidents", population: "33,000", affectedAreas: 1, drainageType: "Underground", maintenanceRate: 84, pwdZone: "Zone-F", repairStatus: "Completed", completionDate: "2024-10-20"},
+			"Ashok Nagar": {status: "Medium", incidents: 3, lastIncident: "2024-12-11", severity: "Drainage problems", population: "41,000", affectedAreas: 4, drainageType: "Mixed", maintenanceRate: 61, pwdZone: "Zone-F", repairStatus: "Planned", completionDate: "2025-02-10"},
+			"Nangloi": {status: "High", incidents: 5, lastIncident: "2024-12-19", severity: "Severe waterlogging", population: "53,000", affectedAreas: 8, drainageType: "Open", maintenanceRate: 44, pwdZone: "Zone-F", repairStatus: "In Progress", completionDate: "2025-02-20"},
+			"Vikaspuri": {status: "Medium", incidents: 2, lastIncident: "2024-11-18", severity: "Seasonal issues", population: "39,000", affectedAreas: 2, drainageType: "Mixed", maintenanceRate: 70, pwdZone: "Zone-F", repairStatus: "Completed", completionDate: "2024-11-08"},
+			"Uttam Nagar": {status: "High", incidents: 6, lastIncident: "2024-12-21", severity: "Persistent waterlogging", population: "58,000", affectedAreas: 10, drainageType: "Mixed", maintenanceRate: 41, pwdZone: "Zone-F", repairStatus: "In Progress", completionDate: "2025-03-10"},
+			"Dwarka": {status: "Low", incidents: 2, lastIncident: "2024-11-08", severity: "Minor drainage issues", population: "72,000", affectedAreas: 2, drainageType: "Underground", maintenanceRate: 86, pwdZone: "Zone-G", repairStatus: "Completed", completionDate: "2024-11-01"},
+			"Karawal Nagar": {status: "High", incidents: 7, lastIncident: "2024-12-20", severity: "Critical waterlogging", population: "64,000", affectedAreas: 13, drainageType: "Open", maintenanceRate: 33, pwdZone: "Zone-H", repairStatus: "In Progress", completionDate: "2025-03-25"},
+			"Mustafabad": {status: "High", incidents: 6, lastIncident: "2024-12-18", severity: "Severe flooding", population: "59,000", affectedAreas: 11, drainageType: "Open", maintenanceRate: 36, pwdZone: "Zone-H", repairStatus: "In Progress", completionDate: "2025-03-15"},
+			"Nand Nagri": {status: "Medium", incidents: 4, lastIncident: "2024-12-13", severity: "Waterlogging in blocks", population: "47,000", affectedAreas: 6, drainageType: "Mixed", maintenanceRate: 57, pwdZone: "Zone-H", repairStatus: "Planned", completionDate: "2025-02-15"},
+			"Yamuna Vihar": {status: "High", incidents: 5, lastIncident: "2024-12-17", severity: "Water body overflow", population: "53,000", affectedAreas: 9, drainageType: "Open", maintenanceRate: 46, pwdZone: "Zone-H", repairStatus: "In Progress", completionDate: "2025-02-28"},
+			"Bhajanpura": {status: "High", incidents: 4, lastIncident: "2024-12-15", severity: "Severe waterlogging", population: "44,000", affectedAreas: 7, drainageType: "Open", maintenanceRate: 49, pwdZone: "Zone-H", repairStatus: "In Progress", completionDate: "2025-02-05"},
+			"Wazirabad": {status: "High", incidents: 5, lastIncident: "2024-12-19", severity: "Near water body issues", population: "36,000", affectedAreas: 8, drainageType: "Open", maintenanceRate: 47, pwdZone: "Zone-H", repairStatus: "In Progress", completionDate: "2025-02-20"},
+			"Gokalpuri": {status: "Medium", incidents: 3, lastIncident: "2024-12-09", severity: "Drainage overflow", population: "32,000", affectedAreas: 3, drainageType: "Mixed", maintenanceRate: 59, pwdZone: "Zone-H", repairStatus: "Planned", completionDate: "2025-02-10"},
+			"Noor-e-Ilaid": {status: "Medium", incidents: 2, lastIncident: "2024-11-22", severity: "Localized waterlogging", population: "28,000", affectedAreas: 2, drainageType: "Mixed", maintenanceRate: 75, pwdZone: "Zone-H", repairStatus: "Completed", completionDate: "2024-11-12"},
+			"Seelampur": {status: "High", incidents: 6, lastIncident: "2024-12-20", severity: "Severe flooding", population: "62,000", affectedAreas: 12, drainageType: "Open", maintenanceRate: 31, pwdZone: "Zone-H", repairStatus: "In Progress", completionDate: "2025-03-30"},
+			"Khajoori": {status: "Medium", incidents: 3, lastIncident: "2024-12-08", severity: "Water pooling", population: "35,000", affectedAreas: 3, drainageType: "Mixed", maintenanceRate: 61, pwdZone: "Zone-H", repairStatus: "Planned", completionDate: "2025-02-05"},
+			"Bawana": {status: "Medium", incidents: 2, lastIncident: "2024-11-25", severity: "Drainage issues", population: "26,000", affectedAreas: 2, drainageType: "Mixed", maintenanceRate: 76, pwdZone: "Zone-I", repairStatus: "Completed", completionDate: "2024-11-15"},
+			"Narela": {status: "Low", incidents: 1, lastIncident: "2024-10-15", severity: "Minimal issues", population: "19,000", affectedAreas: 1, drainageType: "Open", maintenanceRate: 79, pwdZone: "Zone-I", repairStatus: "Completed", completionDate: "2024-10-05"},
+			"Sultanpur": {status: "Medium", incidents: 3, lastIncident: "2024-12-07", severity: "Waterlogging areas", population: "32,000", affectedAreas: 3, drainageType: "Mixed", maintenanceRate: 62, pwdZone: "Zone-I", repairStatus: "Planned", completionDate: "2025-02-15"},
+			"Mangolpuri": {status: "Medium", incidents: 4, lastIncident: "2024-12-14", severity: "Poor drainage", population: "41,000", affectedAreas: 5, drainageType: "Mixed", maintenanceRate: 56, pwdZone: "Zone-I", repairStatus: "In Progress", completionDate: "2025-02-28"},
+			"Jahangirpuri": {status: "High", incidents: 5, lastIncident: "2024-12-16", severity: "Waterlogging in colony", population: "54,000", affectedAreas: 9, drainageType: "Open", maintenanceRate: 43, pwdZone: "Zone-I", repairStatus: "In Progress", completionDate: "2025-03-05"},
+			"Rohini Sector 22": {status: "Low", incidents: 1, lastIncident: "2024-10-28", severity: "Minor issues", population: "25,000", affectedAreas: 1, drainageType: "Underground", maintenanceRate: 81, pwdZone: "Zone-I", repairStatus: "Completed", completionDate: "2024-10-18"},
+			"Najafgarh": {status: "Medium", incidents: 3, lastIncident: "2024-12-10", severity: "Agricultural area issues", population: "29,000", affectedAreas: 3, drainageType: "Open", maintenanceRate: 60, pwdZone: "Zone-J", repairStatus: "Planned", completionDate: "2025-02-20"},
+			"Kapashera": {status: "Medium", incidents: 2, lastIncident: "2024-11-30", severity: "Localized waterlogging", population: "22,000", affectedAreas: 2, drainageType: "Mixed", maintenanceRate: 77, pwdZone: "Zone-J", repairStatus: "Completed", completionDate: "2024-11-20"},
+			"Palam": {status: "Low", incidents: 1, lastIncident: "2024-10-20", severity: "Minimal incidents", population: "18,000", affectedAreas: 1, drainageType: "Open", maintenanceRate: 78, pwdZone: "Zone-J", repairStatus: "Completed", completionDate: "2024-10-10"},
+			"Mehrauli": {status: "Medium", incidents: 2, lastIncident: "2024-12-05", severity: "Drainage problems", population: "37,000", affectedAreas: 2, drainageType: "Mixed", maintenanceRate: 71, pwdZone: "Zone-J", repairStatus: "Completed", completionDate: "2024-11-25"},
+			"Bijwasan": {status: "Low", incidents: 1, lastIncident: "2024-11-10", severity: "Minor issues", population: "24,000", affectedAreas: 1, drainageType: "Underground", maintenanceRate: 83, pwdZone: "Zone-J", repairStatus: "Completed", completionDate: "2024-11-01"},
+			"Mahipalpur": {status: "Low", incidents: 0, lastIncident: "2024-09-15", severity: "Well-maintained", population: "21,000", affectedAreas: 0, drainageType: "Underground", maintenanceRate: 93, pwdZone: "Zone-J", repairStatus: "Completed", completionDate: "2024-09-05"},
+			"Vasant Kunj": {status: "Low", incidents: 1, lastIncident: "2024-10-25", severity: "Minimal waterlogging", population: "38,000", affectedAreas: 1, drainageType: "Underground", maintenanceRate: 85, pwdZone: "Zone-J", repairStatus: "Completed", completionDate: "2024-10-15"},
+			"Chhawla": {status: "Medium", incidents: 2, lastIncident: "2024-11-20", severity: "Seasonal issues", population: "27,000", affectedAreas: 2, drainageType: "Mixed", maintenanceRate: 73, pwdZone: "Zone-J", repairStatus: "Completed", completionDate: "2024-11-10"},
+			"Diplomatic Enclave": {status: "Low", incidents: 0, lastIncident: "2024-08-30", severity: "Excellent drainage", population: "14,000", affectedAreas: 0, drainageType: "Underground", maintenanceRate: 99, pwdZone: "Zone-B", repairStatus: "Completed", completionDate: "2024-08-20"},
+			"President's Estate": {status: "Low", incidents: 0, lastIncident: "2024-08-15", severity: "No issues", population: "10,000", affectedAreas: 0, drainageType: "Underground", maintenanceRate: 99, pwdZone: "Zone-B", repairStatus: "Completed", completionDate: "2024-08-10"},
+			"Rashtrapati Bhavan": {status: "Low", incidents: 0, lastIncident: "2024-08-10", severity: "Well-managed", population: "5,000", affectedAreas: 0, drainageType: "Underground", maintenanceRate: 100, pwdZone: "Zone-B", repairStatus: "Completed", completionDate: "2024-08-01"},
+			"South Avenue": {status: "Low", incidents: 0, lastIncident: "2024-08-20", severity: "Good drainage", population: "8,000", affectedAreas: 0, drainageType: "Underground", maintenanceRate: 98, pwdZone: "Zone-B", repairStatus: "Completed", completionDate: "2024-08-10"},
+			"Janpath": {status: "Low", incidents: 1, lastIncident: "2024-11-01", severity: "Minor issues", population: "12,000", affectedAreas: 1, drainageType: "Underground", maintenanceRate: 90, pwdZone: "Zone-B", repairStatus: "Completed", completionDate: "2024-10-25"},
+			"Raisina Hill": {status: "Low", incidents: 0, lastIncident: "2024-08-25", severity: "Central area management", population: "7,000", affectedAreas: 0, drainageType: "Underground", maintenanceRate: 99, pwdZone: "Zone-B", repairStatus: "Completed", completionDate: "2024-08-15"},
+			"North Avenue": {status: "Low", incidents: 0, lastIncident: "2024-08-18", severity: "No major incidents", population: "6,000", affectedAreas: 0, drainageType: "Underground", maintenanceRate: 99, pwdZone: "Zone-B", repairStatus: "Completed", completionDate: "2024-08-08"}
+		};
+
+		const wardsContainer = document.getElementById('wards');
+		const areaPanel = document.getElementById('areaPanel');
+		const areaList = document.getElementById('areaList');
+		const areaPanelTitle = document.getElementById('areaPanelTitle');
+		const selectedDisplay = document.getElementById('selectedDisplay');
+		const confirmBtn = document.getElementById('confirmBtn');
+		const closeModal = document.getElementById('closeModal');
+
+		const waterLogPanel = document.getElementById('waterLogPanel');
+		const waterLogContent = document.getElementById('waterLogContent');
+		const closeWaterLog = document.getElementById('closeWaterLog');
+
+		const wardNames = Object.keys(wardsData);
+		wardNames.forEach((ward, i) => {
+			const btn = document.createElement('button');
+			btn.className = 'ward-btn';
+			btn.style.background = colors[i % colors.length];
+			btn.textContent = ward;
+			btn.addEventListener('click', () => showAreasForWard(ward));
+			wardsContainer.appendChild(btn);
+		});
+
+		function showAreasForWard(ward){
+			areaPanel.style.display = 'flex';
+			areaPanelTitle.textContent = 'Select area(s) — ' + ward;
+			areaList.innerHTML = '';
+			selectedDisplay.textContent = '';
+			const areas = wardsData[ward] || [];
+			areas.forEach((a, idx) => {
+				const id = 'area_' + idx + '_' + ward.replace(/\s+/g,'_');
+				const label = document.createElement('label');
+				const cb = document.createElement('input');
+				cb.type = 'checkbox';
+				cb.value = a;
+				cb.id = id;
+				label.appendChild(cb);
+				const span = document.createElement('span');
+				span.style.marginLeft = '8px';
+				span.textContent = a;
+				label.appendChild(span);
+				areaList.appendChild(label);
+			});
+		}
+
+		confirmBtn.addEventListener('click', () => {
+			const checked = Array.from(areaList.querySelectorAll('input[type=checkbox]:checked')).map(i=>i.value);
+			if(checked.length === 0){
+				selectedDisplay.textContent = 'No areas selected.';
+			} else {
+				selectedDisplay.textContent = 'Selected areas: ' + checked.join(', ');
+				showWaterLoggingInfo(checked);
+			}
+		});
+
+		function showWaterLoggingInfo(areas){
+			areaPanel.style.display = 'none';
+			waterLogPanel.style.display = 'flex';
+			waterLogContent.innerHTML = '';
+			areas.forEach(area => {
+				const data = waterLoggingData[area] || {status: 'Unknown', incidents: 0, lastIncident: 'N/A', severity: 'No data available', population: 'N/A', affectedAreas: 0, drainageType: 'N/A', maintenanceRate: 0, pwdZone: 'N/A', repairStatus: 'N/A', completionDate: 'N/A'};
+				const statusClass = 'risk-' + data.status.toLowerCase();
+				const div = document.createElement('div');
+				div.className = 'area-log-item';
+				const maintenancePercent = Math.min(100, Math.max(0, data.maintenanceRate));
+				div.innerHTML = `
+					<div class="area-log-header">
+						<div>
+							<div class="area-name">${area}</div>
+							<span class="risk-badge ${statusClass}">${data.status} Risk</span>
+						</div>
+					</div>
+					<div class="log-status">
+						<div class="log-row">
+							<span class="log-label">⚠ Total Incidents (2024)</span>
+							<span class="log-value">${data.incidents}</span>
+						</div>
+						<div class="log-row">
+							<span class="log-label">📍 Affected Areas</span>
+							<span class="log-value">${data.affectedAreas} zones</span>
+						</div>
+						<div class="log-row">
+							<span class="log-label">👥 Population</span>
+							<span class="log-value">${data.population}</span>
+						</div>
+						<div class="log-row">
+							<span class="log-label">🔧 Drainage Type</span>
+							<span class="log-value">${data.drainageType}</span>
+						</div>
+						<div class="log-row">
+							<span class="log-label">📅 Last Incident</span>
+							<span class="log-value">${data.lastIncident}</span>
+						</div>
+						<div class="log-row">
+							<span class="log-label">🏢 PWD Zone</span>
+							<span class="log-value">${data.pwdZone}</span>
+						</div>
+						<div class="log-row">
+							<span class="log-label">🛠 Repair Status</span>
+							<span class="log-value">${data.repairStatus}</span>
+						</div>
+						<div class="log-row">
+							<span class="log-label">✓ Expected Completion</span>
+							<span class="log-value">${data.completionDate}</span>
+						</div>
+					</div>
+					<div style="padding:0 16px 16px">
+						<div class="log-label" style="margin-bottom:6px">💧 Maintenance Score</div>
+						<div class="progress-bar">
+							<div class="progress-fill" style="width:${maintenancePercent}%"></div>
+						</div>
+						<div style="font-size:0.75rem;color:#666;margin-top:4px">${maintenancePercent}% Maintained</div>
+					</div>
+					<div style="padding:0 16px 16px;border-top:1px solid #e0e0e0;margin-top:8px;padding-top:8px;color:#666;font-size:0.9rem">
+						<strong>Situation:</strong> ${data.severity}
+					</div>
+				`;
+				waterLogContent.appendChild(div);
+			});
+		}
+
+		closeModal.addEventListener('click', ()=>{ areaPanel.style.display='none'; });
+		closeWaterLog.addEventListener('click', ()=>{ waterLogPanel.style.display='none'; });
+	</script>
+</body>
+</html>
