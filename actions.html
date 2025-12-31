@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Actions - Delhi Water-Logging</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    body{font-family:Segoe UI, Tahoma, Geneva, Verdana, sans-serif;background:#f4f7fb;color:#222;margin:0;padding:0}
+    .header{background:linear-gradient(135deg,#191970,#4682b4);color:#fff;padding:16px 20px;display:flex;align-items:center;justify-content:space-between}
+    .header .left{display:flex;align-items:center;gap:12px}
+    .header a{color:#fff;text-decoration:none}
+    .container{max-width:800px;margin:20px auto;padding:16px}
+    .card{background:#fff;border-radius:10px;box-shadow:0 6px 20px rgba(0,0,0,0.08);padding:24px;margin-bottom:16px}
+    .form-group{margin-bottom:16px}
+    .form-group label{display:block;font-weight:600;margin-bottom:8px;color:#333}
+    .form-group input,.form-group select,.form-group textarea{width:100%;padding:10px 12px;border:2px solid #ddd;border-radius:8px;font-family:inherit;font-size:14px}
+    .form-group input:focus,.form-group select:focus,.form-group textarea:focus{outline:none;border-color:#4facfe;box-shadow:0 0 8px rgba(79,172,254,0.2)}
+    .form-group textarea{resize:vertical;min-height:100px}
+    .btn-submit{background:linear-gradient(135deg,#11998e,#38ef7d);border:none;color:#fff;padding:12px 24px;border-radius:8px;cursor:pointer;font-weight:600;margin-right:8px}
+    .btn-submit:hover{transform:translateY(-2px);box-shadow:0 6px 16px rgba(17,153,142,0.3)}
+    .btn-back{background:#4facfe;border:none;color:#fff;padding:10px 14px;border-radius:8px;cursor:pointer}
+    .header-right{display:flex;gap:8px}
+    .success{display:none;background:#d4edda;color:#155724;padding:12px;border-radius:8px;margin-bottom:16px;border:1px solid #c3e6cb}
+    .success.show{display:block}
+  </style>
+</head>
+<body>
+  <header class="header">
+    <div class="left">
+      <a href="reports.html" title="Back to Reports"><i class="fas fa-arrow-left"></i></a>
+      <h1 style="font-size:18px;margin:0">Deploy Action</h1>
+    </div>
+    <div class="header-right">
+      <a href="reports.html"><button class="btn-back"><i class="fas fa-list"></i> Reports</button></a>
+      <a href="jalyukti.html"><button class="btn-back"><i class="fas fa-home"></i> Dashboard</button></a>
+    </div>
+  </header>
+
+  <main class="container">
+    <div class="card">
+      <div id="successMsg" class="success">
+        <i class="fas fa-check-circle"></i> Action deployed successfully!
+      </div>
+      
+      <h2 style="margin-top:0">Deploy Action</h2>
+      <p style="color:#666">Assign and track actions for water-logging hotspots.</p>
+
+      <form id="actionForm">
+        <div class="form-group">
+          <label for="actionLocation"><i class="fas fa-map-marker-alt"></i> Location / Report ID <span style="color:#ff4757">*</span></label>
+          <input type="text" id="actionLocation" placeholder="e.g., ITO Junction or Report #1" required>
+        </div>
+
+        <div class="form-group">
+          <label for="actionType"><i class="fas fa-tasks"></i> Action Type <span style="color:#ff4757">*</span></label>
+          <select id="actionType" required>
+            <option value="">Select Action Type</option>
+            <option value="pump">Deploy Pump</option>
+            <option value="drain">Clear Drain</option>
+            <option value="traffic">Traffic Diversion</option>
+            <option value="alert">Issue Alert</option>
+            <option value="inspection">Inspection</option>
+            <option value="desilting">Desilting</option>
+            <option value="repair">Repair Work</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="actionPriority"><i class="fas fa-flag"></i> Priority <span style="color:#ff4757">*</span></label>
+          <select id="actionPriority" required>
+            <option value="high">High</option>
+            <option value="medium">Medium</option>
+            <option value="low">Low</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="actionAssignee"><i class="fas fa-user"></i> Assign To</label>
+          <input type="text" id="actionAssignee" placeholder="Name of person/agency">
+        </div>
+
+        <div class="form-group">
+          <label for="actionDeadline"><i class="fas fa-calendar"></i> Deadline</label>
+          <input type="date" id="actionDeadline">
+        </div>
+
+        <div class="form-group">
+          <label for="actionNotes"><i class="fas fa-sticky-note"></i> Notes & Details</label>
+          <textarea id="actionNotes" placeholder="Add any additional details, resources needed, or special instructions..."></textarea>
+        </div>
+
+        <div style="display:flex;gap:8px">
+          <button type="submit" class="btn-submit">
+            <i class="fas fa-paper-plane"></i> Deploy Action
+          </button>
+          <a href="reports.html"><button type="button" class="btn-back">Cancel</button></a>
+        </div>
+      </form>
+    </div>
+
+    <div class="card">
+      <h3><i class="fas fa-info-circle"></i> Recent Actions</h3>
+      <div id="actionsList">
+        <p style="color:#666;margin:0">No actions deployed yet.</p>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    // Load and display recent actions
+    function loadActions() {
+      const saved = localStorage.getItem('deployedActions');
+      const actions = saved ? JSON.parse(saved) : [];
+      const container = document.getElementById('actionsList');
+      
+      if (actions.length === 0) {
+        container.innerHTML = '<p style="color:#666;margin:0">No actions deployed yet.</p>';
+        return;
+      }
+
+      container.innerHTML = actions.map((a, i) => `
+        <div style="padding:12px;border-bottom:1px solid #eee;display:flex;justify-content:space-between;align-items:center">
+          <div>
+            <strong style="display:block">${a.type}</strong>
+            <small style="color:#666">${a.location} • ${a.date}</small>
+          </div>
+          <span style="background:${a.priority==='high'?'#ff4757':a.priority==='medium'?'#ffa502':'#11998e'};color:#fff;padding:4px 8px;border-radius:4px;font-size:12px">${a.priority}</span>
+        </div>
+      `).join('');
+    }
+
+    // Form submission
+    document.getElementById('actionForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+
+      const location = document.getElementById('actionLocation').value;
+      const type = document.getElementById('actionType').value;
+      const priority = document.getElementById('actionPriority').value;
+      const assignee = document.getElementById('actionAssignee').value || 'Unassigned';
+      const deadline = document.getElementById('actionDeadline').value || 'N/A';
+      const notes = document.getElementById('actionNotes').value;
+
+      // Save to localStorage
+      const saved = localStorage.getItem('deployedActions');
+      const actions = saved ? JSON.parse(saved) : [];
+      actions.unshift({
+        location,
+        type,
+        priority,
+        assignee,
+        deadline,
+        notes,
+        date: new Date().toLocaleString()
+      });
+      localStorage.setItem('deployedActions', JSON.stringify(actions.slice(0, 10))); // Keep last 10
+
+      // Show success message
+      const successMsg = document.getElementById('successMsg');
+      successMsg.classList.add('show');
+      setTimeout(() => successMsg.classList.remove('show'), 3000);
+
+      // Reset form and refresh actions list
+      document.getElementById('actionForm').reset();
+      loadActions();
+    });
+
+    // Load actions on page load
+    document.addEventListener('DOMContentLoaded', loadActions);
+  </script>
+</body>
+</html>

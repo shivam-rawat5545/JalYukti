@@ -1,0 +1,794 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Preparedness - Delhi Water-Logging</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 25%, #f093fb 50%, #4facfe 75%, #00f2fe 100%);
+      background-attachment: fixed;
+      min-height: 100vh;
+      color: #333;
+    }
+
+    .header {
+      background: linear-gradient(135deg, rgba(25, 25, 112, 0.95) 0%, rgba(70, 130, 180, 0.95) 100%);
+      backdrop-filter: blur(10px);
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+      border-bottom: 3px solid #00f2fe;
+    }
+
+    .header .left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      color: #fff;
+    }
+
+    .header a {
+      color: #fff;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+    }
+
+    .header h1 {
+      font-size: 18px;
+      margin: 0;
+      font-weight: 600;
+    }
+
+    .header-right {
+      display: flex;
+      gap: 8px;
+    }
+
+    .back-btn {
+      background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+      border: none;
+      color: #fff;
+      padding: 10px 14px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .back-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 16px rgba(79, 172, 254, 0.4);
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 20px auto;
+      padding: 16px;
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 15px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+      padding: 24px;
+      margin-bottom: 20px;
+    }
+
+    .card h2 {
+      color: #19197e;
+      margin-bottom: 8px;
+      font-size: 24px;
+    }
+
+    .card > p {
+      color: #666;
+      margin-bottom: 20px;
+      font-size: 14px;
+    }
+
+    .preparedness-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 20px;
+    }
+
+    .prep-card {
+      background: linear-gradient(135deg, #f8f9fa 0%, #f0f7ff 100%);
+      border: 2px solid #e0e0e0;
+      border-radius: 12px;
+      padding: 20px;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    }
+
+    .prep-card:hover {
+      border-color: #4facfe;
+      box-shadow: 0 8px 20px rgba(79, 172, 254, 0.2);
+      transform: translateY(-5px);
+    }
+
+    .prep-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 18px;
+      padding-bottom: 12px;
+      border-bottom: 2px solid #e0e0e0;
+    }
+
+    .prep-header h3 {
+      color: #19197e;
+      font-size: 18px;
+      margin: 0;
+    }
+
+    .prep-score {
+      padding: 8px 14px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 700;
+      color: white;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .prep-score.ready {
+      background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+    }
+
+    .prep-score.attention {
+      background: linear-gradient(135deg, #ffa502 0%, #ffb347 100%);
+    }
+
+    .prep-score.critical {
+      background: linear-gradient(135deg, #ff4757 0%, #ff6348 100%);
+    }
+
+    .prep-details {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .prep-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px;
+      background: white;
+      border-radius: 8px;
+      border-left: 4px solid #4facfe;
+    }
+
+    .prep-item i {
+      font-size: 20px;
+      color: #4facfe;
+      min-width: 24px;
+    }
+
+    .prep-item-content {
+      flex: 1;
+    }
+
+    .prep-item-label {
+      display: block;
+      color: #666;
+      font-size: 12px;
+      margin-bottom: 4px;
+    }
+
+    .prep-item-value {
+      display: block;
+      color: #19197e;
+      font-size: 16px;
+      font-weight: 700;
+    }
+
+    .progress-bar {
+      width: 100%;
+      height: 6px;
+      background: #e0e0e0;
+      border-radius: 3px;
+      overflow: hidden;
+      margin-top: 4px;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #4facfe, #00f2fe);
+      border-radius: 3px;
+      transition: width 0.3s ease;
+    }
+
+    .prep-item.warning .prep-item-label {
+      color: #ffa502;
+    }
+
+    .prep-item.warning .prep-item-value {
+      color: #ffa502;
+    }
+
+    .prep-item.warning {
+      border-left-color: #ffa502;
+    }
+
+    .prep-item.warning i {
+      color: #ffa502;
+    }
+
+    .prep-item.critical .prep-item-label {
+      color: #ff4757;
+    }
+
+    .prep-item.critical .prep-item-value {
+      color: #ff4757;
+    }
+
+    .prep-item.critical {
+      border-left-color: #ff4757;
+    }
+
+    .prep-item.critical i {
+      color: #ff4757;
+    }
+
+    .stats-overview {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+
+    .stat-item {
+      background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+      color: white;
+      padding: 16px;
+      border-radius: 10px;
+      text-align: center;
+      box-shadow: 0 4px 12px rgba(79, 172, 254, 0.3);
+    }
+
+    .stat-item.orange {
+      background: linear-gradient(135deg, #ffa502 0%, #ffb347 100%);
+      box-shadow: 0 4px 12px rgba(255, 165, 2, 0.3);
+    }
+
+    .stat-item.red {
+      background: linear-gradient(135deg, #ff4757 0%, #ff6348 100%);
+      box-shadow: 0 4px 12px rgba(255, 71, 87, 0.3);
+    }
+
+    .stat-item.green {
+      background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+      box-shadow: 0 4px 12px rgba(17, 153, 142, 0.3);
+    }
+
+    .stat-label {
+      display: block;
+      font-size: 12px;
+      opacity: 0.9;
+      margin-bottom: 6px;
+    }
+
+    .stat-value {
+      display: block;
+      font-size: 28px;
+      font-weight: 700;
+    }
+
+    .action-buttons {
+      display: flex;
+      gap: 10px;
+      margin-top: 20px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      padding: 12px 20px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 16px rgba(79, 172, 254, 0.4);
+    }
+
+    .btn-secondary {
+      background: #f0f0f0;
+      color: #19197e;
+      border: 2px solid #e0e0e0;
+    }
+
+    .btn-secondary:hover {
+      background: #e0e0e0;
+      border-color: #4facfe;
+    }
+
+    .details-section {
+      margin-top: 20px;
+      padding-top: 20px;
+      border-top: 2px solid #f0f0f0;
+    }
+
+    .details-section h3 {
+      color: #19197e;
+      margin-bottom: 15px;
+      font-size: 18px;
+    }
+
+    .legend {
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+      padding: 15px;
+      background: #f8f9fa;
+      border-radius: 10px;
+      border-left: 4px solid #4facfe;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+    }
+
+    .legend-indicator {
+      width: 20px;
+      height: 20px;
+      border-radius: 4px;
+    }
+
+    @media (max-width: 768px) {
+      .header {
+        flex-direction: column;
+        gap: 10px;
+        text-align: center;
+      }
+
+      .header .left {
+        justify-content: center;
+      }
+
+      .header-right {
+        width: 100%;
+        justify-content: center;
+      }
+
+      .preparedness-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .stats-overview {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .action-buttons {
+        flex-direction: column;
+      }
+
+      .btn {
+        width: 100%;
+        justify-content: center;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <header class="header">
+    <div class="left">
+      <a href="jalyukti.html" title="Back to Dashboard"><i class="fas fa-arrow-left"></i></a>
+      <h1>Zone Preparedness Status</h1>
+    </div>
+    <div class="header-right">
+      <a href="reports.html"><button class="back-btn"><i class="fas fa-comments"></i> Reports</button></a>
+      <a href="actions.html"><button class="back-btn"><i class="fas fa-tasks"></i> Actions</button></a>
+      <a href="jalyukti.html"><button class="back-btn"><i class="fas fa-home"></i> Dashboard</button></a>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="container">
+    <!-- Overview Card -->
+    <div class="card">
+      <h2>Delhi Water-Logging Preparedness</h2>
+      <p>Real-time monitoring of preparedness levels across different zones and sectors in Delhi.</p>
+
+      <!-- Statistics Overview -->
+      <div class="stats-overview">
+        <div class="stat-item green">
+          <span class="stat-label">Fully Ready</span>
+          <span class="stat-value">4</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-label">Needs Attention</span>
+          <span class="stat-value">3</span>
+        </div>
+        <div class="stat-item orange">
+          <span class="stat-label">At Risk</span>
+          <span class="stat-value">2</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-label">Total Zones</span>
+          <span class="stat-value">9</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Preparedness Cards -->
+    <div class="card">
+      <h2>Zone Status</h2>
+      <p>Detailed preparedness metrics for each zone in Delhi.</p>
+
+      <div class="preparedness-grid">
+        <!-- Central Delhi -->
+        <div class="prep-card">
+          <div class="prep-header">
+            <h3>Central Delhi</h3>
+            <span class="prep-score attention">Needs Attention</span>
+          </div>
+          <div class="prep-details">
+            <div class="prep-item warning">
+              <i class="fas fa-broom"></i>
+              <div class="prep-item-content">
+                <span class="prep-item-label">Desilting Progress</span>
+                <span class="prep-item-value">72%</span>
+                <div class="progress-bar">
+                  <div class="progress-fill" style="width: 72%"></div>
+                </div>
+              </div>
+            </div>
+            <div class="prep-item">
+              <i class="fas fa-pump-medical"></i>
+              <div class="prep-item-content">
+                <span class="prep-item-label">Pumps Available</span>
+                <span class="prep-item-value">8 / 10</span>
+              </div>
+            </div>
+            <div class="prep-item">
+              <i class="fas fa-user-check"></i>
+              <div class="prep-item-content">
+                <span class="prep-item-label">Staff Status</span>
+                <span class="prep-item-value">Available</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- North Delhi -->
+        <div class="prep-card">
+          <div class="prep-header">
+            <h3>North Delhi</h3>
+            <span class="prep-score ready">Ready</span>
+          </div>
+          <div class="prep-details">
+            <div class="prep-item">
+              <i class="fas fa-broom"></i>
+              <div class="prep-item-content">
+                <span class="prep-item-label">Desilting Progress</span>
+                <span class="prep-item-value">95%</span>
+                <div class="progress-bar">
+                  <div class="progress-fill" style="width: 95%"></div>
+                </div>
+              </div>
+            </div>
+            <div class="prep-item">
+              <i class="fas fa-pump-medical"></i>
+              <div class="prep-item-content">
+                <span class="prep-item-label">Pumps Available</span>
+                <span class="prep-item-value">12 / 12</span>
+              </div>
+            </div>
+            <div class="prep-item">
+              <i class="fas fa-user-check"></i>
+              <div class="prep-item-content">
+                <span class="prep-item-label">Staff Status</span>
+                <span class="prep-item-value">Available</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- South Delhi -->
+        <div class="prep-card">
+          <div class="prep-header">
+            <h3>South Delhi</h3>
+            <span class="prep-score ready">Ready</span>
+          </div>
+          <div class="prep-details">
+            <div class="prep-item">
+              <i class="fas fa-broom"></i>
+              <div class="prep-item-content">
+                <span class="prep-item-label">Desilting Progress</span>
+                <span class="prep-item-value">88%</span>
+                <div class="progress-bar">
+                  <div class="progress-fill" style="width: 88%"></div>
+                </div>
+              </div>
+            </div>
+            <div class="prep-item">
+              <i class="fas fa-pump-medical"></i>
+              <div class="prep-item-content">
+                <span class="prep-item-label">Pumps Available</span>
+                <span class="prep-item-value">10 / 10</span>
+              </div>
+            </div>
+            <div class="prep-item">
+              <i class="fas fa-user-check"></i>
+              <div class="prep-item-content">
+                <span class="prep-item-label">Staff Status</span>
+                <span class="prep-item-value">Available</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- East Delhi -->
+        <div class="prep-card">
+          <div class="prep-header">
+            <h3>East Delhi</h3>
+            <span class="prep-score attention">Needs Attention</span>
+          </div>
+          <div class="prep-details">
+            <div class="prep-item warning">
+              <i class="fas fa-broom"></i>
+              <div class="prep-item-content">
+                <span class="prep-item-label">Desilting Progress</span>
+                <span class="prep-item-value">65%</span>
+                <div class="progress-bar">
+                  <div class="progress-fill" style="width: 65%"></div>
+                </div>
+              </div>
+            </div>
+            <div class="prep-item">
+              <i class="fas fa-pump-medical"></i>
+              <div class="prep-item-content">
+                <span class="prep-item-label">Pumps Available</span>
+                <span class="prep-item-value">9 / 11</span>
+              </div>
+            </div>
+            <div class="prep-item">
+              <i class="fas fa-user-check"></i>
+              <div class="prep-item-content">
+                <span class="prep-item-label">Staff Status</span>
+                <span class="prep-item-value">Available</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- West Delhi -->
+        <div class="prep-card">
+          <div class="prep-header">
+            <h3>West Delhi</h3>
+            <span class="prep-score ready">Ready</span>
+          </div>
+          <div class="prep-details">
+            <div class="prep-item">
+              <i class="fas fa-broom"></i>
+              <div class="prep-item-content">
+                <span class="prep-item-label">Desilting Progress</span>
+                <span class="prep-item-value">92%</span>
+                <div class="progress-bar">
+                  <div class="progress-fill" style="width: 92%"></div>
+                </div>
+              </div>
+            </div>
+            <div class="prep-item">
+              <i class="fas fa-pump-medical"></i>
+              <div class="prep-item-content">
+                <span class="prep-item-label">Pumps Available</span>
+                <span class="prep-item-value">11 / 11</span>
+              </div>
+            </div>
+            <div class="prep-item">
+              <i class="fas fa-user-check"></i>
+              <div class="prep-item-content">
+                <span class="prep-item-label">Staff Status</span>
+                <span class="prep-item-value">Available</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Northeast Delhi -->
+        <div class="prep-card">
+          <div class="prep-header">
+            <h3>Northeast Delhi</h3>
+            <span class="prep-score critical">At Risk</span>
+          </div>
+          <div class="prep-details">
+            <div class="prep-item critical">
+              <i class="fas fa-broom"></i>
+              <div class="prep-item-content">
+                <span class="prep-item-label">Desilting Progress</span>
+                <span class="prep-item-value">45%</span>
+                <div class="progress-bar">
+                  <div class="progress-fill" style="width: 45%"></div>
+                </div>
+              </div>
+            </div>
+            <div class="prep-item critical">
+              <i class="fas fa-pump-medical"></i>
+              <div class="prep-item-content">
+                <span class="prep-item-label">Pumps Available</span>
+                <span class="prep-item-value">6 / 10</span>
+              </div>
+            </div>
+            <div class="prep-item warning">
+              <i class="fas fa-user-check"></i>
+              <div class="prep-item-content">
+                <span class="prep-item-label">Staff Status</span>
+                <span class="prep-item-value">Limited</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Northwest Delhi -->
+        <div class="prep-card">
+          <div class="prep-header">
+            <h3>Northwest Delhi</h3>
+            <span class="prep-score ready">Ready</span>
+          </div>
+          <div class="prep-details">
+            <div class="prep-item">
+              <i class="fas fa-broom"></i>
+              <div class="prep-item-content">
+                <span class="prep-item-label">Desilting Progress</span>
+                <span class="prep-item-value">85%</span>
+                <div class="progress-bar">
+                  <div class="progress-fill" style="width: 85%"></div>
+                </div>
+              </div>
+            </div>
+            <div class="prep-item">
+              <i class="fas fa-pump-medical"></i>
+              <div class="prep-item-content">
+                <span class="prep-item-label">Pumps Available</span>
+                <span class="prep-item-value">9 / 9</span>
+              </div>
+            </div>
+            <div class="prep-item">
+              <i class="fas fa-user-check"></i>
+              <div class="prep-item-content">
+                <span class="prep-item-label">Staff Status</span>
+                <span class="prep-item-value">Available</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Outer Delhi -->
+        <div class="prep-card">
+          <div class="prep-header">
+            <h3>Outer Delhi</h3>
+            <span class="prep-score attention">Needs Attention</span>
+          </div>
+          <div class="prep-details">
+            <div class="prep-item warning">
+              <i class="fas fa-broom"></i>
+              <div class="prep-item-content">
+                <span class="prep-item-label">Desilting Progress</span>
+                <span class="prep-item-value">70%</span>
+                <div class="progress-bar">
+                  <div class="progress-fill" style="width: 70%"></div>
+                </div>
+              </div>
+            </div>
+            <div class="prep-item">
+              <i class="fas fa-pump-medical"></i>
+              <div class="prep-item-content">
+                <span class="prep-item-label">Pumps Available</span>
+                <span class="prep-item-value">7 / 9</span>
+              </div>
+            </div>
+            <div class="prep-item">
+              <i class="fas fa-user-check"></i>
+              <div class="prep-item-content">
+                <span class="prep-item-label">Staff Status</span>
+                <span class="prep-item-value">Available</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- New Delhi NDMC -->
+        <div class="prep-card">
+          <div class="prep-header">
+            <h3>New Delhi (NDMC)</h3>
+            <span class="prep-score ready">Ready</span>
+          </div>
+          <div class="prep-details">
+            <div class="prep-item">
+              <i class="fas fa-broom"></i>
+              <div class="prep-item-content">
+                <span class="prep-item-label">Desilting Progress</span>
+                <span class="prep-item-value">98%</span>
+                <div class="progress-bar">
+                  <div class="progress-fill" style="width: 98%"></div>
+                </div>
+              </div>
+            </div>
+            <div class="prep-item">
+              <i class="fas fa-pump-medical"></i>
+              <div class="prep-item-content">
+                <span class="prep-item-label">Pumps Available</span>
+                <span class="prep-item-value">15 / 15</span>
+              </div>
+            </div>
+            <div class="prep-item">
+              <i class="fas fa-user-check"></i>
+              <div class="prep-item-content">
+                <span class="prep-item-label">Staff Status</span>
+                <span class="prep-item-value">Fully Staffed</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Legend -->
+      <div class="details-section">
+        <h3>Legend & Guidelines</h3>
+        <div class="legend">
+          <div class="legend-item">
+            <div class="legend-indicator" style="background: linear-gradient(135deg, #11998e, #38ef7d);"></div>
+            <span><strong>Ready:</strong> All systems operational, >85% desilting</span>
+          </div>
+          <div class="legend-item">
+            <div class="legend-indicator" style="background: linear-gradient(135deg, #ffa502, #ffb347);"></div>
+            <span><strong>Needs Attention:</strong> 70-84% desilting, some resources needed</span>
+          </div>
+          <div class="legend-item">
+            <div class="legend-indicator" style="background: linear-gradient(135deg, #ff4757, #ff6348);"></div>
+            <span><strong>At Risk:</strong> <70% desilting, critical resource gaps</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="action-buttons">
+        <a href="jalyukti.html"><button class="btn btn-primary"><i class="fas fa-home"></i> Back to Dashboard</button></a>
+        <a href="actions.html"><button class="btn btn-primary"><i class="fas fa-tasks"></i> Deploy Resources</button></a>
+        <a href="reports.html"><button class="btn btn-secondary"><i class="fas fa-comments"></i> View Reports</button></a>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    // Update the Preparedness tab in dashboard to navigate here
+    document.addEventListener('DOMContentLoaded', function() {
+      console.log('Preparedness page loaded');
+    });
+  </script>
+</body>
+</html>

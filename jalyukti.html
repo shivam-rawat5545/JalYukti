@@ -256,6 +256,26 @@
             box-shadow: 0 8px 16px rgba(79, 172, 254, 0.4);
         }
 
+        .map-btn:active {
+            transform: translateY(-1px);
+        }
+
+        .map-btn.active {
+            background: #4facfe;
+            color: white;
+        }
+
+        #aiBtn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: 2px solid #764ba2;
+            color: white;
+        }
+
+        #aiBtn:hover {
+            background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+            border-color: #667eea;
+        }
+
         .tab-btn {
             background: rgba(255, 255, 255, 0.7);
             border: 2px solid #e0e0e0;
@@ -1539,24 +1559,6 @@
                 </div>
             </div>
 
-                <!-- AI Modal -->
-                <div class="profile-modal" id="aiModal">
-                    <div class="profile-card-modal" style="max-width:600px;">
-                        <button class="profile-close" onclick="closeAiModal()">&times;</button>
-                        <div style="margin-bottom:10px;">
-                            <h3 style="margin:0;color:#19197e;">Assistant</h3>
-                            <p style="color:#666;margin:6px 0 12px;">Ask for suggestions, actions, or insights about hotspots.</p>
-                        </div>
-                        <div>
-                            <textarea id="aiInput" placeholder="Ask something like: 'What should we do for Connaught Place?'" style="width:100%;height:100px;padding:12px;border-radius:8px;border:1px solid #e0e0e0;"></textarea>
-                            <div style="display:flex;gap:10px;margin-top:12px;">
-                                <button class="btn-profile-edit" onclick="aiAsk()">Ask Assistant</button>
-                                <button class="btn-profile-logout" onclick="closeAiModal()">Close</button>
-                            </div>
-                        </div>
-                        <div id="aiResponse" style="margin-top:16px;display:none;padding:12px;background:#f8f9fa;border-radius:8px;color:#19197e;"></div>
-                    </div>
-                </div>
             <div class="profile-details">
                 <div class="profile-detail-item">
                     <div class="profile-detail-label">Email</div>
@@ -1583,6 +1585,41 @@
                     <i class="fas fa-sign-out-alt"></i> Logout
                 </button>
             </div>
+        </div>
+    </div>
+
+    <!-- AI Modal (Separate from Profile Modal) -->
+    <div class="profile-modal" id="aiModal">
+        <div class="profile-card-modal" style="max-width:650px;">
+            <button class="profile-close" onclick="closeAiModal()">&times;</button>
+            <div style="margin-bottom:15px;border-bottom:2px solid #f0f0f0;padding-bottom:15px;">
+                <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px;">
+                    <i class="fas fa-robot" style="font-size:24px;color:#764ba2;"></i>
+                    <h3 style="margin:0;color:#19197e;font-size:20px;">Water-Logging Assistant</h3>
+                </div>
+                <p style="color:#666;margin:0;font-size:13px;">AI-powered insights for hotspot management. Ask about locations, risk levels, or get action recommendations.</p>
+            </div>
+            <div style="background:#f0f7ff;padding:12px;border-radius:8px;margin-bottom:15px;border-left:4px solid #4facfe;font-size:13px;color:#19197e;">
+                <strong>💡 Tip:</strong> Try asking "What should we do for Connaught Place?" or "Show high-risk areas actions"
+            </div>
+            <div>
+                <textarea id="aiInput" placeholder="Ask something like: 'What should we do for Connaught Place?' or 'Suggest actions for high-risk areas'" style="width:100%;height:90px;padding:12px;border-radius:8px;border:2px solid #e0e0e0;font-family:inherit;resize:vertical;transition:border-color 0.3s;" onkeypress="if(event.key==='Enter' && event.ctrlKey) aiAsk();"></textarea>
+                <div style="display:flex;gap:10px;margin-top:12px;flex-wrap:wrap;align-items:center;">
+                    <button class="btn-profile-edit" id="aiAskBtn" onclick="aiAsk()" style="flex:1;min-width:120px;">
+                        <i class="fas fa-paper-plane" style="margin-right:6px;"></i>Ask Assistant
+                    </button>
+                    <button class="btn-profile-logout" onclick="closeAiModal()" style="min-width:90px;">Close</button>
+                    <label style="display:flex;align-items:center;gap:8px;color:#666;font-size:13px;margin-left:auto;">
+                        <input type="checkbox" id="useOpenAI" style="width:16px;height:16px;cursor:pointer;" onclick="toggleUseOpenAI()"> 
+                        <span>Use OpenAI API</span>
+                    </label>
+                </div>
+                <div style="display:flex;gap:8px;margin-top:10px;align-items:center;flex-wrap:wrap;">
+                    <input id="openaiKey" type="password" placeholder="Paste your OpenAI API key (optional, for advanced AI responses)" style="flex:1;min-width:200px;padding:10px;border-radius:8px;border:1px solid #e0e0e0;font-size:13px;">
+                    <button class="btn-profile-edit" onclick="saveOpenAIKey()" style="padding:10px 15px;min-width:60px;">Save Key</button>
+                </div>
+            </div>
+            <div id="aiResponse" style="margin-top:16px;display:none;padding:15px;background:linear-gradient(135deg, #f8f9ff 0%, #f0f7ff 100%);border-radius:8px;color:#19197e;white-space:pre-wrap;border-left:4px solid #764ba2;max-height:300px;overflow-y:auto;line-height:1.6;"></div>
         </div>
     </div>
 
@@ -2317,8 +2354,8 @@
             document.getElementById('togglePumps')?.addEventListener('click', togglePumps);
             document.getElementById('resetView')?.addEventListener('click', () => { window.dashboardMap.setView(delhiCenter, 12); });
 
-            // AI button
-            document.getElementById('aiBtn')?.addEventListener('click', () => { document.getElementById('aiModal').classList.add('active'); });
+            // AI button - now a proper map control
+            document.getElementById('aiBtn')?.addEventListener('click', () => { openAiModal(); });
         }
 
         // Load user data from localStorage
@@ -2459,30 +2496,174 @@
         function closeAiModal() {
             document.getElementById('aiModal').classList.remove('active');
             document.getElementById('aiResponse').style.display = 'none';
+            const aiBtn = document.getElementById('aiBtn');
+            if (aiBtn) aiBtn.classList.remove('active');
         }
 
-        // Very small client-side assistant (no external AI used)
-        function aiAsk() {
-            const q = document.getElementById('aiInput').value.trim().toLowerCase();
+        function openAiModal() {
+            document.getElementById('aiModal').classList.add('active');
+            const aiBtn = document.getElementById('aiBtn');
+            if (aiBtn) aiBtn.classList.add('active');
+            // Focus on input for better UX
+            setTimeout(() => {
+                const input = document.getElementById('aiInput');
+                if (input) input.focus();
+            }, 300);
+        }
+
+        // Save/load OpenAI key and preference
+        function saveOpenAIKey() {
+            const key = document.getElementById('openaiKey').value.trim();
+            if (!key) { alert('Please paste your OpenAI API key (or leave blank to use local assistant)'); return; }
+            try { localStorage.setItem('openaiApiKey', key); localStorage.setItem('useOpenAI', '1'); document.getElementById('useOpenAI').checked = true; alert('OpenAI key saved locally (stored in browser only)'); } catch(e){ alert('Could not save key: ' + e.message); }
+        }
+
+        function toggleUseOpenAI() {
+            const cb = document.getElementById('useOpenAI');
+            if (cb.checked) {
+                localStorage.setItem('useOpenAI', '1');
+            } else {
+                localStorage.removeItem('useOpenAI');
+            }
+        }
+
+        function loadOpenAISettings() {
+            const savedKey = localStorage.getItem('openaiApiKey');
+            const use = localStorage.getItem('useOpenAI');
+            if (savedKey) document.getElementById('openaiKey').value = savedKey;
+            if (use) document.getElementById('useOpenAI').checked = true;
+        }
+
+        // AI assistant: uses OpenAI when configured, otherwise local heuristics
+        async function aiAsk() {
+            const qRaw = document.getElementById('aiInput').value.trim();
+            const q = qRaw.toLowerCase();
             const out = document.getElementById('aiResponse');
             out.style.display = 'block';
-            if (!q) { out.textContent = 'Please enter a question.'; return; }
+            out.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Analyzing map data and generating response...';
+            const useOpenAI = !!localStorage.getItem('useOpenAI');
+            const apiKey = localStorage.getItem('openaiApiKey');
 
-            // Simple heuristics
+            if (useOpenAI && apiKey) {
+                try {
+                    document.getElementById('aiAskBtn').disabled = true;
+                    const payload = {
+                        model: 'gpt-3.5-turbo',
+                        messages: [
+                            { role: 'system', content: 'You are a helpful assistant for a Delhi water-logging dashboard. Provide concise, actionable suggestions for hotspots and safety guidance. Reference specific locations like Connaught Place, ITO Junction, Minto Bridge, etc. when relevant.' },
+                            { role: 'user', content: qRaw }
+                        ],
+                        max_tokens: 400,
+                        temperature: 0.3
+                    };
+                    const res = await fetch('https://api.openai.com/v1/chat/completions', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': 'Bearer ' + apiKey
+                        },
+                        body: JSON.stringify(payload)
+                    });
+                    if (!res.ok) {
+                        const txt = await res.text();
+                        out.innerHTML = '<b style="color:#ff4757;">OpenAI Error:</b> ' + res.status + ' - ' + (txt.substring(0, 100));
+                        document.getElementById('aiAskBtn').disabled = false;
+                        return;
+                    }
+                    const data = await res.json();
+                    const reply = (data && data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content) ? data.choices[0].message.content.trim() : 'No response.';
+                    out.innerHTML = '<b style="color:#764ba2;">💬 Assistant Response:</b>\n\n' + reply;
+                    document.getElementById('aiAskBtn').disabled = false;
+                    return;
+                } catch (e) {
+                    out.innerHTML = '<b style="color:#ff4757;">⚠️ Error:</b> ' + e.message;
+                    document.getElementById('aiAskBtn').disabled = false;
+                    return;
+                }
+            }
+
+            // Fallback: local heuristics with enhanced responses
+            if (!q) { out.innerHTML = '<b style="color:#ff4757;">❌</b> Please enter a question about the water-logging situation.'; return; }
+
+            // Enhanced local responses with map context
             if (q.includes('connaught') || q.includes('connaught place')) {
-                out.innerHTML = '<b>Suggestion:</b> Connaught Place is Very High risk. Deploy pumps and alert traffic control. Prioritize drainage clearing near inner circle.';
+                out.innerHTML = '<b style="color:#764ba2;">📍 Connaught Place Analysis:</b>\n\n' +
+                    '✓ Risk Level: Very High (8.9/10)\n' +
+                    '✓ Priority Actions:\n' +
+                    '  • Deploy emergency pump stations immediately\n' +
+                    '  • Alert traffic control for diversions\n' +
+                    '  • Prioritize drainage clearing near inner circle\n' +
+                    '  • Post flood alerts in retail outlets\n\n' +
+                    '⚠️ Recommended Response Time: Within 15 minutes of heavy rainfall';
                 return;
             }
-            if (q.includes('flood') || q.includes('heavy rain')) {
-                out.innerHTML = '<b>Action Plan:</b> Issue alerts to citizens, deploy available pumps, arrange traffic diversions, and dispatch drainage teams to reported hotspots.';
+            if (q.includes('minto') || q.includes('tilak')) {
+                out.innerHTML = '<b style="color:#764ba2;">📍 Central Delhi Hotspots:</b>\n\n' +
+                    '✓ Affected Areas: Minto Bridge (Very High), Tilak Bridge (High)\n' +
+                    '✓ Action Plan:\n' +
+                    '  • Activate desilting teams\n' +
+                    '  • Position pumps at both locations\n' +
+                    '  • Monitor water levels hourly\n' +
+                    '  • Prepare evacuation routes\n\n' +
+                    '⏱️ Estimated Response: 20-30 minutes';
                 return;
             }
-            if (q.includes('where') || q.includes('locat')) {
-                out.innerHTML = '<b>Tip:</b> Use the search box to find an address or click a hotspot marker to get details.';
+            if (q.includes('flood') || q.includes('heavy rain') || q.includes('monsoon')) {
+                out.innerHTML = '<b style="color:#764ba2;">🌧️ Flood Response Action Plan:</b>\n\n' +
+                    '1️⃣ Immediate (0-30 min):\n' +
+                    '  • Issue public alerts via SMS/media\n' +
+                    '  • Deploy available pumps to hotspots\n' +
+                    '  • Arrange traffic diversions\n\n' +
+                    '2️⃣ Short-term (30 min - 2 hours):\n' +
+                    '  • Dispatch drainage cleanup teams\n' +
+                    '  • Monitor all zones via dashboard\n' +
+                    '  • Coordinate with rescue services\n\n' +
+                    '3️⃣ Follow-up:\n' +
+                    '  • Document affected areas\n' +
+                    '  • Report damage assessment';
                 return;
             }
-            // Generic fallback
-            out.innerHTML = '<b>Assistant:</b> I can suggest actions for hotspots, explain risk levels, or help search locations. Try asking about a location or say "flood".';
+            if (q.includes('where') || q.includes('locat') || q.includes('find')) {
+                out.innerHTML = '<b style="color:#764ba2;">🗺️ How to Find Locations:</b>\n\n' +
+                    '✓ Search Bar: Use the map search at top-left\n' +
+                    '✓ Click Markers: Red markers on map show hotspots\n' +
+                    '✓ Risk Colors:\n' +
+                    '  • 🔴 Red = Very High Risk\n' +
+                    '  • 🟠 Orange = High Risk\n' +
+                    '  • 🟡 Yellow = Medium Risk\n\n' +
+                    '✓ Toggle Layers: Use buttons to show/hide reports & pumps';
+                return;
+            }
+            if (q.includes('pump') || q.includes('dewatering') || q.includes('drainage')) {
+                out.innerHTML = '<b style="color:#764ba2;">💧 Pump & Drainage Solutions:</b>\n\n' +
+                    '✓ Available Resources:\n' +
+                    '  • 45 pump stations citywide\n' +
+                    '  • Dwarka Sector 10 (Medium risk)\n' +
+                    '  • Vasant Kunj (Medium risk)\n\n' +
+                    '✓ Deployment Strategy:\n' +
+                    '  • Prioritize Very High risk zones first\n' +
+                    '  • Support desilting operations\n' +
+                    '  • Monitor drainage system capacity\n\n' +
+                    '✓ Maintenance: Regular desilting to prevent future flooding';
+                return;
+            }
+            if (q.includes('risk') || q.includes('danger') || q.includes('safe')) {
+                out.innerHTML = '<b style="color:#764ba2;">⚠️ Risk Assessment Guide:</b>\n\n' +
+                    '🔴 Very High (8.0-10): Immediate evacuation, full resources\n' +
+                    '🟠 High (6.0-7.9): Deploy teams, monitor closely\n' +
+                    '🟡 Medium (4.0-5.9): Preventive measures, on-alert\n' +
+                    '🟢 Low (0-3.9): Standard protocols, regular monitoring\n\n' +
+                    '✓ Current Critical Zones: Connaught Place, ITO Junction, Minto Bridge';
+                return;
+            }
+            out.innerHTML = '<b style="color:#764ba2;">🤖 Welcome to Assistant!</b>\n\n' +
+                'I can help with:\n' +
+                '  • Specific hotspot analysis (try "Connaught Place")\n' +
+                '  • Flood response actions (say "heavy rain")\n' +
+                '  • Location guidance (say "where is...")\n' +
+                '  • Pump & drainage info\n' +
+                '  • Risk assessment & safety tips\n\n' +
+                '💡 Tip: Use the map buttons above to toggle layers (hotspots, pumps, heatmap)';
         }
 
         // Move profile button into header when dashboard shows to avoid overlap
@@ -2498,6 +2679,28 @@
             if (mapSearchWrap) mapSearchWrap.style.display = 'flex';
         }
 
+        // Tab switching function
+        function switchTab(tabName) {
+            // Hide all tab contents
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Remove active class from all buttons
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // Show selected tab content
+            const tabContent = document.getElementById(tabName + '-tab');
+            if (tabContent) {
+                tabContent.classList.add('active');
+            }
+            
+            // Add active class to clicked button
+            event.target.classList.add('active');
+        }
+
         // Wire up search and AI buttons after DOM load
         document.addEventListener('DOMContentLoaded', function() {
             const mapSearchBtn = document.getElementById('mapSearchBtn');
@@ -2505,9 +2708,44 @@
             const mapSearchInput = document.getElementById('mapSearch');
             if (mapSearchInput) mapSearchInput.addEventListener('keypress', function(e){ if (e.key === 'Enter') searchLocation(); });
 
-            // Ensure ai button exists
+            // Ensure ai button exists and is functional
             const aiBtn = document.getElementById('aiBtn');
-            if (aiBtn) aiBtn.addEventListener('click', function(){ document.getElementById('aiModal').classList.add('active'); });
+            if (aiBtn) aiBtn.addEventListener('click', function(){ openAiModal(); });
+            // Load OpenAI settings into modal inputs
+            try { loadOpenAISettings(); } catch(e) {}
+            
+            // Connect all action buttons in hotspots table to go to actions page
+            document.querySelectorAll('.tab-content .btn-action').forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    // Navigate to actions page
+                    location.href = 'actions.html';
+                });
+            });
+            
+            // Tab switching with click on tab buttons
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    const tabName = this.getAttribute('data-tab');
+                    
+                    // Special handling for reports tab
+                    if (tabName === 'reports') {
+                        e.preventDefault();
+                        location.href = 'reports.html';
+                        return;
+                    }
+                    
+                    // Special handling for preparedness tab
+                    if (tabName === 'preparedness') {
+                        e.preventDefault();
+                        location.href = 'preparedness.html';
+                        return;
+                    }
+                    
+                    // Standard tab switching for other tabs
+                    switchTab(tabName);
+                });
+            });
         });
 
         // Toggle Password Visibility
@@ -2536,6 +2774,40 @@
                 toggleBtn.innerHTML = '<i class="fas fa-eye"></i>';
             }
         }
+
+        // Action Form Submission (from dashboard actions tab)
+        document.addEventListener('DOMContentLoaded', function() {
+            const actionForm = document.getElementById('actionForm');
+            if (actionForm) {
+                actionForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    
+                    const location = document.getElementById('actionLocation').value.trim();
+                    const type = document.getElementById('actionType').value;
+                    
+                    if (!location || !type) {
+                        alert('Please fill in all required fields');
+                        return;
+                    }
+                    
+                    // Save action to localStorage
+                    const saved = localStorage.getItem('deployedActions');
+                    const actions = saved ? JSON.parse(saved) : [];
+                    actions.unshift({
+                        location: location,
+                        type: type,
+                        date: new Date().toLocaleString()
+                    });
+                    localStorage.setItem('deployedActions', JSON.stringify(actions.slice(0, 20)));
+                    
+                    // Show success message
+                    alert('Action deployed successfully! Redirecting to Actions page...');
+                    
+                    // Redirect to actions page
+                    location.href = 'actions.html';
+                });
+            }
+        });
 
         // Form Submission
         document.getElementById('signupForm').addEventListener('submit', function(e) {
@@ -2623,9 +2895,32 @@
         document.addEventListener('DOMContentLoaded', function() {
             updateDateTime();
             initializeMap();
-            // Load saved profile if exists
+            // Load saved profile if exists and auto-open dashboard
             if (loadUserProfile()) {
                 console.log('User profile loaded:', userData);
+                // Hide signup, show dashboard UI
+                const signup = document.querySelector('.signup-wrapper');
+                const header = document.querySelector('.header');
+                const container = document.querySelector('.container');
+                if (signup) signup.style.display = 'none';
+                if (header) header.style.display = 'block';
+                if (container) container.style.display = 'flex';
+
+                // Populate profile details in modal/header
+                try {
+                    document.getElementById('profileName').textContent = userData.fullName || 'User Name';
+                    document.getElementById('profileEmail').textContent = userData.email || 'example@email.com';
+                    document.getElementById('profilePhone').textContent = userData.phone || '+91 XXXXXX';
+                    document.getElementById('profileAddress').textContent = userData.address || 'Not Set';
+                    document.getElementById('profileZone').textContent = `Zone: ${userData.ward || 'Not Set'}`;
+                    document.getElementById('profileType').textContent = userData.userType || 'Citizen';
+                } catch (e) {}
+
+                // Initialize dashboard map and move profile button into header
+                setTimeout(() => {
+                    try { initializeDashboardMap(); } catch(e) {}
+                    try { moveProfileIntoHeader(); } catch(e) {}
+                }, 300);
             }
         });
         
