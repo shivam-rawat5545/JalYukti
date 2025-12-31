@@ -152,11 +152,11 @@
     }
 
     .prep-score.attention {
-      background: linear-gradient(135deg, #ffa502 0%, #ffb347 100%);
+      background: linear-gradient(135deg, #f39c12 0%, #f1c40f 100%);
     }
 
     .prep-score.critical {
-      background: linear-gradient(135deg, #ff4757 0%, #ff6348 100%);
+      background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
     }
 
     .prep-details {
@@ -216,35 +216,35 @@
     }
 
     .prep-item.warning .prep-item-label {
-      color: #ffa502;
+      color: #f39c12;
     }
 
     .prep-item.warning .prep-item-value {
-      color: #ffa502;
+      color: #f39c12;
     }
 
     .prep-item.warning {
-      border-left-color: #ffa502;
+      border-left-color: #f39c12;
     }
 
     .prep-item.warning i {
-      color: #ffa502;
+      color: #f39c12;
     }
 
     .prep-item.critical .prep-item-label {
-      color: #ff4757;
+      color: #e74c3c;
     }
 
     .prep-item.critical .prep-item-value {
-      color: #ff4757;
+      color: #e74c3c;
     }
-
+             
     .prep-item.critical {
-      border-left-color: #ff4757;
+      border-left-color: #e74c3c;
     }
 
     .prep-item.critical i {
-      color: #ff4757;
+      color: #e74c3c;
     }
 
     .stats-overview {
@@ -264,13 +264,13 @@
     }
 
     .stat-item.orange {
-      background: linear-gradient(135deg, #ffa502 0%, #ffb347 100%);
-      box-shadow: 0 4px 12px rgba(255, 165, 2, 0.3);
+      background: linear-gradient(135deg, #f39c12 0%, #f1c40f 100%);
+      box-shadow: 0 4px 12px rgba(243, 156, 18, 0.3);
     }
 
     .stat-item.red {
-      background: linear-gradient(135deg, #ff4757 0%, #ff6348 100%);
-      box-shadow: 0 4px 12px rgba(255, 71, 87, 0.3);
+      background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+      box-shadow: 0 4px 12px rgba(231, 76, 60, 0.3);
     }
 
     .stat-item.green {
@@ -402,7 +402,6 @@
   </style>
 </head>
 <body>
-  <!-- Header -->
   <header class="header">
     <div class="left">
       <a href="jalyukti.html" title="Back to Dashboard"><i class="fas fa-arrow-left"></i></a>
@@ -415,26 +414,23 @@
     </div>
   </header>
 
-  <!-- Main Content -->
   <main class="container">
-    <!-- Overview Card -->
     <div class="card">
       <h2>Delhi Water-Logging Preparedness</h2>
       <p>Real-time monitoring of preparedness levels across different zones and sectors in Delhi.</p>
 
-      <!-- Statistics Overview -->
       <div class="stats-overview">
         <div class="stat-item green">
           <span class="stat-label">Fully Ready</span>
-          <span class="stat-value">4</span>
+          <span class="stat-value">5</span>
         </div>
-        <div class="stat-item">
+        <div class="stat-item orange">
           <span class="stat-label">Needs Attention</span>
           <span class="stat-value">3</span>
         </div>
-        <div class="stat-item orange">
+        <div class="stat-item red">
           <span class="stat-label">At Risk</span>
-          <span class="stat-value">2</span>
+          <span class="stat-value">1</span>
         </div>
         <div class="stat-item">
           <span class="stat-label">Total Zones</span>
@@ -443,13 +439,11 @@
       </div>
     </div>
 
-    <!-- Preparedness Cards -->
     <div class="card">
       <h2>Zone Status</h2>
       <p>Detailed preparedness metrics for each zone in Delhi.</p>
 
       <div class="preparedness-grid">
-        <!-- Central Delhi -->
         <div class="prep-card">
           <div class="prep-header">
             <h3>Central Delhi</h3>
@@ -472,6 +466,8 @@
                 <span class="prep-item-label">Pumps Available</span>
                 <span class="prep-item-value">8 / 10</span>
               </div>
+            </div
+
             </div>
             <div class="prep-item">
               <i class="fas fa-user-check"></i>
@@ -765,7 +761,7 @@
             <span><strong>Ready:</strong> All systems operational, >85% desilting</span>
           </div>
           <div class="legend-item">
-            <div class="legend-indicator" style="background: linear-gradient(135deg, #ffa502, #ffb347);"></div>
+            <div class="legend-indicator" style="background: linear-gradient(135deg, #fdd835, #ffeb3b);"></div>
             <span><strong>Needs Attention:</strong> 70-84% desilting, some resources needed</span>
           </div>
           <div class="legend-item">
